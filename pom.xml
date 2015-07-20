@@ -11,7 +11,8 @@
       Codenvy, S.A. - initial API and implementation
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>maven-depmgt-pom</artifactId>
@@ -58,9 +59,9 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="index.html" todir="${project.zip.dir}" />
-                                <copy file="term.js" todir="${project.zip.dir}" />
-                                <copy file="server.go" todir="${project.go.build.dir}" />
+                                <copy file="index.html" todir="${project.zip.dir}"/>
+                                <copy file="term.js" todir="${project.zip.dir}"/>
+                                <copy file="server.go" todir="${project.go.build.dir}"/>
                             </target>
                         </configuration>
                     </execution>
@@ -72,7 +73,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="${project.go.build.dir}/terminal" todir="${project.zip.dir}" />
+                                <copy file="${project.go.build.dir}/terminal" todir="${project.zip.dir}"/>
                                 <chmod file="${project.zip.dir}/terminal" perm="+x"/>
                             </target>
                         </configuration>
@@ -84,22 +85,52 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>compile-go</id>
+                        <id>compile-websocket</id>
                         <phase>compile</phase>
                         <goals>
                             <goal>exec</goal>
                         </goals>
+                        <configuration>
+                            <executable>go</executable>
+                            <workingDirectory>${project.go.build.dir}</workingDirectory>
+                            <arguments>
+                                <argument>get</argument>
+                                <argument>github.com/gorilla/websocket</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-pty</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>go</executable>
+                            <workingDirectory>${project.go.build.dir}</workingDirectory>
+                            <arguments>
+                                <argument>get</argument>
+                                <argument>github.com/codenvy/pty</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-server</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>go</executable>
+                            <workingDirectory>${project.go.build.dir}</workingDirectory>
+                            <arguments>
+                                <argument>build</argument>
+                                <argument>-o</argument>
+                                <argument>terminal</argument>
+                            </arguments>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <executable>go</executable>
-                    <workingDirectory>${project.go.build.dir}</workingDirectory>
-                    <arguments>
-                        <argument>build</argument>
-                        <argument>-o</argument>
-                        <argument>terminal</argument>
-                    </arguments>
-                </configuration>
             </plugin>
         </plugins>
     </build>
