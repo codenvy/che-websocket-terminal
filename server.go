@@ -22,7 +22,7 @@ import (
 	"encoding/base64"
 	"flag"
 	"github.com/gorilla/websocket"
-	"github.com/kr/pty"
+	"github.com/codenvy/pty"
 	"io"
 	"log"
 	"net/http"
@@ -53,6 +53,8 @@ func (wp *wsPty) Start() {
 	if err != nil {
 		log.Fatalf("Failed to start command: %s\n", err)
 	}
+	//Set the size of the pty
+	pty.Setsize(wp.Pty, 60, 200)
 }
 
 func (wp *wsPty) Stop() {

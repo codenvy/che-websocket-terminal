@@ -13,8 +13,8 @@ There is none. Use at your own risk.
 It's a bit raw at the moment.
 
     go get github.com/gorilla/websocket
-    go get github.com/kr/pty
-    git clone https://github.com/tobert/websocket-terminal.git
+    go get github.com/codenvy/pty
+    git clone https://github.com/codenvy/websocket-terminal.git
     cd websocket-terminal
     go build
     ./websocket-terminal -cmd /bin/bash -addr :9000
