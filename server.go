@@ -19,7 +19,6 @@ package main
  */
 
 import (
-	"encoding/base64"
 	"flag"
 	"github.com/gorilla/websocket"
 	"github.com/codenvy/pty"
@@ -49,6 +48,9 @@ func (wp *wsPty) Start() {
 	var err error
 	args := flag.Args()
 	wp.Cmd = exec.Command(cmdFlag, args...)
+	env := os.Environ()
+	env = append(env, "TERM=xterm")
+	wp.Cmd.Env = env
 	wp.Pty, err = pty.Start(wp.Cmd)
 	if err != nil {
 		log.Fatalf("Failed to start command: %s\n", err)
@@ -76,20 +78,16 @@ func ptyHandler(w http.ResponseWriter, r *http.Request) {
 	// copy everything from the pty master to the websocket
 	// using base64 encoding for now due to limitations in term.js
 	go func() {
-		buf := make([]byte, 128)
+		buf := make([]byte, 8192)
 		// TODO: more graceful exit on socket close / process exit
 		for {
+			// TODO: process situation when multi-byte UTF-8 char is isplitted between reads (due to size of buffer)
 			n, err := wp.Pty.Read(buf)
 			if err != nil {
 				log.Printf("Failed to read from pty master: %s", err)
 				return
 			}
-
-			out := make([]byte, base64.StdEncoding.EncodedLen(n))
-			base64.StdEncoding.Encode(out, buf[0:n])
-
-			err = conn.WriteMessage(websocket.TextMessage, out)
-
+			err = conn.WriteMessage(websocket.TextMessage, buf[0:n])
 			if err != nil {
 				log.Printf("Failed to send %d bytes on websocket: %s", n, err)
 				return
@@ -112,12 +110,7 @@ func ptyHandler(w http.ResponseWriter, r *http.Request) {
 		case websocket.BinaryMessage:
 			log.Printf("Ignoring binary message: %q\n", payload)
 		case websocket.TextMessage:
-			buf := make([]byte, base64.StdEncoding.DecodedLen(len(payload)))
-			_, err := base64.StdEncoding.Decode(buf, payload)
-			if err != nil {
-				log.Printf("base64 decoding of payload failed: %s\n", err)
-			}
-			wp.Pty.Write(buf)
+			wp.Pty.Write(payload)
 		default:
 			log.Printf("Invalid message type %d\n", mt)
 			return

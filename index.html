@@ -9,7 +9,7 @@
 
 <script>
 $(document).ready(function(){
-  var sock = new WebSocket("ws://localhost:9000/pty");
+  var sock = new WebSocket("ws://" + window.location.host + "/pty");
 
   sock.onerror = function (e) {
     console.log("socket error", e);
@@ -38,11 +38,11 @@ $(document).ready(function(){
     // it's ugly and wrong. The right answer is to refactor term.js to use
     // ArrayBuffer with uint8 and convert runes on the fly on the client
     term.on('data', function(data) {
-      sock.send(btoa(data));
+      sock.send(data);
     });
 
     sock.onmessage = function(msg) {
-      term.write(atob(msg.data));
+      term.write(msg.data);
     };
   };
 });
