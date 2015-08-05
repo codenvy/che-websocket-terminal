@@ -27,6 +27,10 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"encoding/json"
+	"bufio"
+	"bytes"
+	"unicode/utf8"
 )
 
 var addrFlag, cmdFlag, staticFlag string
@@ -79,22 +83,55 @@ func ptyHandler(w http.ResponseWriter, r *http.Request) {
 	// using base64 encoding for now due to limitations in term.js
 	go func() {
 		buf := make([]byte, 8192)
+	    reader := bufio.NewReader(wp.Pty)
+		var buffer bytes.Buffer;
 		// TODO: more graceful exit on socket close / process exit
 		for {
-			// TODO: process situation when multi-byte UTF-8 char is isplitted between reads (due to size of buffer)
-			n, err := wp.Pty.Read(buf)
-			if err != nil {
+			n, err := reader.Read(buf);
+			
+			if err != nil{
 				log.Printf("Failed to read from pty master: %s", err)
-				return
+		    	return
 			}
-			err = conn.WriteMessage(websocket.TextMessage, buf[0:n])
-			if err != nil {
-				log.Printf("Failed to send %d bytes on websocket: %s", n, err)
-				return
+			//read byte array as Unicode code points (rune in go)
+
+        	bufferBytes := buffer.Bytes()
+			runeReader := bufio.NewReader(bytes.NewReader(append(bufferBytes[:],buf[:n]...)))
+			buffer.Reset()
+			i := 0;
+			for i< n{
+				char, charLen, e := runeReader.ReadRune()
+				if e != nil{
+					log.Printf("Failed to read from pty master: %s", err)
+					return
+				}
+				
+				if char == utf8.RuneError {
+					runeReader.UnreadRune()
+					break
+				}
+				i += charLen;
+			    buffer.WriteRune(char)
+			}			
+			err = conn.WriteMessage(websocket.TextMessage, buffer.Bytes())
+	     	if err != nil {
+		     	log.Printf("Failed to send UTF8 char: %s", err)
+			    	return
 			}
+			buffer.Reset();
+			if i < n{
+				buffer.Write(buf[i:n])
+			}
+
 		}
 	}()
-
+	
+	type Message struct{
+		Type string `json:"type"`
+		Data json.RawMessage `json:"data"`
+	}
+	
+	
 	// read from the web socket, copying to the pty master
 	// messages are expected to be text and base64 encoded
 	for {
@@ -105,12 +142,40 @@ func ptyHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-
+		var msg Message;
 		switch mt {
 		case websocket.BinaryMessage:
 			log.Printf("Ignoring binary message: %q\n", payload)
 		case websocket.TextMessage:
-			wp.Pty.Write(payload)
+			err := json.Unmarshal(payload, &msg);
+			if err != nil{
+				log.Printf("Invalid message %s\n", err);
+				continue
+			}
+			switch msg.Type{
+				case "resize" :
+				    var size []float64;					
+				    err := json.Unmarshal(msg.Data, &size)
+					if err != nil{
+						log.Printf("Invalid resize message: %s\n", err);
+					} else{
+					  	pty.Setsize(wp.Pty,uint16(size[1]), uint16(size[0]));	
+					}
+					
+				case "data" :
+					var dat string;
+					err := json.Unmarshal(msg.Data, &dat);
+					if err != nil{
+						log.Printf("Invalid data message %s\n", err);
+					} else{
+						wp.Pty.Write([]byte(dat));	
+					}
+			        
+				default:
+				    log.Printf("Invalid message type %d\n", mt)
+			        return
+			}
+			
 		default:
 			log.Printf("Invalid message type %d\n", mt)
 			return
