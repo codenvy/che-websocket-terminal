@@ -9,8 +9,7 @@
 
 <script>
     $(document).ready(function () {
-//  var sock = new WebSocket("ws://" + window.location.host + "/pty");
-        var sock = new WebSocket("ws://localhost:9000/pty");
+        var sock = new WebSocket("ws://" + window.location.host + "/pty");
 
         sock.onerror = function (e) {
             console.log("socket error", e);
