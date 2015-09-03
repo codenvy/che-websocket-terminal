@@ -20,13 +20,13 @@
     </parent>
     <groupId>org.eclipse.che.terminal</groupId>
     <artifactId>che-websocket-terminal</artifactId>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Che Terminal</name>
     <scm>
         <connection>scm:git:git@github.com:codenvy/websocket-terminal.git</connection>
         <developerConnection>scm:git:git@github.com:codenvy/websocket-terminal.git</developerConnection>
-        <tag>1.0</tag>
+        <tag>HEAD</tag>
         <url>https://github.com/codenvy/websocket-terminal</url>
     </scm>
     <properties>
