@@ -11,8 +11,7 @@
       Codenvy, S.A. - initial API and implementation
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>maven-depmgt-pom</artifactId>
@@ -24,6 +23,12 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Che Terminal</name>
+    <scm>
+        <connection>scm:git:git@github.com:codenvy/websocket-terminal.git</connection>
+        <developerConnection>scm:git:git@github.com:codenvy/websocket-terminal.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/codenvy/websocket-terminal</url>
+    </scm>
     <properties>
         <project.go.build.dir>${project.build.directory}/go</project.go.build.dir>
         <project.zip.dir>${project.build.directory}/dir/terminal</project.zip.dir>
@@ -60,9 +65,9 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="index.html" todir="${project.zip.dir}"/>
-                                <copy file="term.js" todir="${project.zip.dir}"/>
-                                <copy file="server.go" todir="${project.go.build.dir}"/>
+                                <copy file="index.html" todir="${project.zip.dir}" />
+                                <copy file="term.js" todir="${project.zip.dir}" />
+                                <copy file="server.go" todir="${project.go.build.dir}" />
                             </target>
                         </configuration>
                     </execution>
@@ -74,8 +79,8 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="${project.go.build.dir}/terminal" todir="${project.zip.dir}"/>
-                                <chmod file="${project.zip.dir}/terminal" perm="+x"/>
+                                <copy file="${project.go.build.dir}/terminal" todir="${project.zip.dir}" />
+                                <chmod file="${project.zip.dir}/terminal" perm="+x" />
                             </target>
                         </configuration>
                     </execution>
