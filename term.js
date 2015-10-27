@@ -208,7 +208,6 @@ function Terminal(options) {
   this.normal = null;
 
   // select modes
-  this.prefixMode = false;
   this.selectMode = false;
   this.visualMode = false;
   this.searchMode = false;
@@ -2583,24 +2582,15 @@ Terminal.prototype.keyDown = function(ev) {
       if (ev.ctrlKey) {
         if (ev.keyCode >= 65 && ev.keyCode <= 90) {
           // Ctrl-A
-          if (this.screenKeys) {
-            if (!this.prefixMode && !this.selectMode && ev.keyCode === 65) {
-              this.enterPrefix();
-              return cancel(ev);
-            }
+          if (ev.keyCode === 65) {
+            return;
           }
           // Ctrl-V
-          if (this.prefixMode && ev.keyCode === 86) {
-            this.leavePrefix();
+          if (ev.keyCode === 86) {
             return;
           }
           // Ctrl-C
-          if ((this.prefixMode || this.selectMode) && ev.keyCode === 67) {
-            if (this.visualMode) {
-              setTimeout(function() {
-                self.leaveVisual();
-              }, 1);
-            }
+          if (ev.keyCode === 67) {
             return;
           }
           key = String.fromCharCode(ev.keyCode - 64);
@@ -2633,16 +2623,6 @@ Terminal.prototype.keyDown = function(ev) {
   }
 
   if (!key) return true;
-
-  if (this.prefixMode) {
-    this.leavePrefix();
-    return cancel(ev);
-  }
-
-  if (this.selectMode) {
-    this.keySelect(ev, key);
-    return cancel(ev);
-  }
 
   this.emit('keydown', ev);
   this.emit('key', key, ev);
@@ -2683,12 +2663,6 @@ Terminal.prototype.keyPress = function(ev) {
   if (!key || ev.ctrlKey || ev.altKey || ev.metaKey) return false;
 
   key = String.fromCharCode(key);
-
-  if (this.prefixMode) {
-    this.leavePrefix();
-    this.keyPrefix(ev, key);
-    return false;
-  }
 
   if (this.selectMode) {
     this.keySelect(ev, key);
@@ -4644,17 +4618,8 @@ Terminal.prototype.deleteColumns = function() {
 };
 
 /**
- * Prefix/Select/Visual/Search Modes
+ * Select/Visual/Search Modes
  */
-
-Terminal.prototype.enterPrefix = function() {
-  this.prefixMode = true;
-};
-
-Terminal.prototype.leavePrefix = function() {
-  this.prefixMode = false;
-};
-
 Terminal.prototype.enterSelect = function() {
   this._real = {
     x: this.x,
