@@ -2590,7 +2590,9 @@ Terminal.prototype.keyDown = function(ev) {
             return;
           }
           // Ctrl-C
-          if (ev.keyCode === 67) {
+          var sel = window.getSelection().getRangeAt(0);
+          var range = sel.endOffset - sel.startOffset;
+          if (ev.keyCode === 67 && range > 0) {
             return;
           }
           key = String.fromCharCode(ev.keyCode - 64);
