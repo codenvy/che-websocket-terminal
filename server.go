@@ -20,7 +20,7 @@ package main
 
 import (
 	"flag"
-	"github.com/gorilla/websocket"
+	"github.com/codenvy/websocket"
 	"github.com/codenvy/pty"
 	"io"
 	"log"

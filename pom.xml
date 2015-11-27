@@ -101,7 +101,7 @@
                             <workingDirectory>${project.go.build.dir}</workingDirectory>
                             <arguments>
                                 <argument>get</argument>
-                                <argument>github.com/gorilla/websocket</argument>
+                                <argument>github.com/codenvy/websocket</argument>
                             </arguments>
                         </configuration>
                     </execution>
