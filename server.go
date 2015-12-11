@@ -33,11 +33,32 @@ import (
 	"unicode/utf8"
 )
 
-var addrFlag, cmdFlag, staticFlag string
+// The address to run this terminal on.
+// May be either "IP:PORT" or just ":PORT" default is ":9000".
+// It is set by "addr" command line argument.
+var addressFlag string
 
-var upgrader = websocket.Upgrader{
+// The command to execute on slave side of the pty.
+// The default value is "/bin/bash".
+// It is set by "cmd" command line argument.
+var	commandFlag string
+
+// The path to the static content.
+// The default value is path to the current directory.
+// It is set by "static" command line argument.
+var staticContentFlag string
+
+
+// Sets websocket limitations
+// TODO: Should check if user has access to the terminal
+var upgrader = websocket.Upgrader {
+
+	// Limits the size of the input message to the 1 byte
 	ReadBufferSize:  1,
+
+	// Limits the size of the output message to the 1 byte
 	WriteBufferSize: 1,
+
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
@@ -88,7 +109,7 @@ func ptyHandler(w http.ResponseWriter, r *http.Request) {
 		// TODO: more graceful exit on socket close / process exit
 		for {
 			n, err := reader.Read(buf);
-			
+
 			if err != nil{
 				log.Printf("Failed to read from pty master: %s", err)
 		    	return
@@ -105,14 +126,14 @@ func ptyHandler(w http.ResponseWriter, r *http.Request) {
 					log.Printf("Failed to read from pty master: %s", err)
 					return
 				}
-				
+
 				if char == utf8.RuneError {
 					runeReader.UnreadRune()
 					break
 				}
 				i += charLen;
 			    buffer.WriteRune(char)
-			}			
+			}
 			err = conn.WriteMessage(websocket.TextMessage, buffer.Bytes())
 	     	if err != nil {
 		     	log.Printf("Failed to send UTF8 char: %s", err)
@@ -125,13 +146,13 @@ func ptyHandler(w http.ResponseWriter, r *http.Request) {
 
 		}
 	}()
-	
+
 	type Message struct{
 		Type string `json:"type"`
 		Data json.RawMessage `json:"data"`
 	}
-	
-	
+
+
 	// read from the web socket, copying to the pty master
 	// messages are expected to be text and base64 encoded
 	for {
@@ -154,28 +175,28 @@ func ptyHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			switch msg.Type{
 				case "resize" :
-				    var size []float64;					
+				    var size []float64;
 				    err := json.Unmarshal(msg.Data, &size)
 					if err != nil{
 						log.Printf("Invalid resize message: %s\n", err);
 					} else{
-					  	pty.Setsize(wp.Pty,uint16(size[1]), uint16(size[0]));	
+					  	pty.Setsize(wp.Pty,uint16(size[1]), uint16(size[0]));
 					}
-					
+
 				case "data" :
 					var dat string;
 					err := json.Unmarshal(msg.Data, &dat);
 					if err != nil{
 						log.Printf("Invalid data message %s\n", err);
 					} else{
-						wp.Pty.Write([]byte(dat));	
+						wp.Pty.Write([]byte(dat));
 					}
-			        
+
 				default:
 				    log.Printf("Invalid message type %d\n", mt)
 			        return
 			}
-			
+
 		default:
 			log.Printf("Invalid message type %d\n", mt)
 			return
@@ -187,9 +208,9 @@ func ptyHandler(w http.ResponseWriter, r *http.Request) {
 
 func init() {
 	cwd, _ := os.Getwd()
-	flag.StringVar(&addrFlag, "addr", ":9000", "IP:PORT or :PORT address to listen on")
-	flag.StringVar(&cmdFlag, "cmd", "/bin/bash", "command to execute on slave side of the pty")
-	flag.StringVar(&staticFlag, "static", cwd, "path to static content")
+	flag.StringVar(&addressFlag,       "addr",  ":9000",     "IP:PORT or :PORT address to listen on")
+	flag.StringVar(&commandFlag,       "cmd",   "/bin/bash", "command to execute on slave side of the pty")
+	flag.StringVar(&staticContentFlag, "static", cwd,        "path to static content")
 	// TODO: make sure paths exist and have correct permissions
 }
 
