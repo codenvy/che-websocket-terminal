@@ -33,7 +33,7 @@ import (
 	"unicode/utf8"
 )
 
-// The address to run this terminal on.
+// The address to run this http server on.
 // May be either "IP:PORT" or just ":PORT" default is ":9000".
 // It is set by "addr" command line argument.
 var addressFlag string
@@ -140,7 +140,7 @@ func transferPtyFileContentToWebsocket(conn *websocket.Conn, ptyFile *os.File) {
 		for i < ptyBytesRead {
 			runeChar, runeLen, err := runeReader.ReadRune()
 			if err != nil {
-				log.Printf("Failed to read rune from pty rune buffer: %s", err)
+				log.Printf("Failed to read rune from the pty rune buffer: %s", err)
 				return
 			}
 			if runeChar == utf8.RuneError {
