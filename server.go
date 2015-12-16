@@ -33,6 +33,23 @@ import (
 	"unicode/utf8"
 )
 
+const (
+	// environment variable TERM=xterm
+	// used as environment for executing commandFlag command
+	DefaultTerm = "xterm"
+
+	// default size of the pty
+	DefaultTermRows = 60;
+	DefaultTermCols = 200;
+
+	// default buffer size for reading from pty file
+	DefaultPtyBufferSize = 8192;
+
+	// Flag default values
+	DefaultTerminalServerAddr     = "localhost:9000";
+	DefaultCommand                = "/bin/bash"
+)
+
 // The address to run this http server on.
 // May be either "IP:PORT" or just ":PORT" default is ":9000".
 // It is set by "addr" command line argument.
@@ -47,17 +64,6 @@ var commandFlag string
 // The default value is path to the current directory.
 // It is set by "static" command line argument.
 var staticContentPathFlag string
-
-// environment variable TERM=xterm
-// used as environment for executing commandFlag command
-const DefaultTerm = "xterm";
-
-// default size of the pty
-const DefaultTermRows = 60;
-const DefaultTermCols = 200;
-
-// default buffer size for reading from pty file
-const defaultPtyBufferSize = 8192;
 
 
 type WsPty struct {
@@ -88,20 +94,18 @@ func startPty() (wsPty *WsPty, err error) {
 	// adjust pty
 	pty.Setsize(ptyFile, DefaultTermRows, DefaultTermCols);
 
-	return &WsPty {
+	return &WsPty{
 		command,
 		ptyFile,
 	}, err
 }
 
-// FIXME close in the true way
 func (wp *WsPty) Stop() {
 	wp.ptyFile.Close()
 	wp.command.Wait()
 }
 
 // Sets websocket limitations
-// TODO: Should check if user has access to the terminal
 var upgrader = websocket.Upgrader {
 
 	// Limits the size of the input message to the 1 byte
@@ -122,7 +126,7 @@ var upgrader = websocket.Upgrader {
 // * When any error occurs during writing to the websocket channel
 func transferPtyFileContentToWebsocket(conn *websocket.Conn, ptyFile *os.File) {
 	// buffer which keeps ptyFile bytes
-	ptyBuf        := make([]byte, defaultPtyBufferSize)
+	ptyBuf        := make([]byte, DefaultPtyBufferSize)
 	ptyFileReader := bufio.NewReader(ptyFile)
 	tmpBuf        := new(bytes.Buffer);
 	// TODO: more graceful exit on socket close / process exit
@@ -172,17 +176,16 @@ func ptyHandler(httpWriter http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(httpWriter, r, nil)
 	if err != nil {
 		log.Printf("Websocket upgrade failed: %s\n", err)
-		// TODO not always unauthorized
-		httpWriter.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	defer conn.Close();
+	defer conn.Close()
 
-	wsPty, err := startPty();
+	wsPty, err := startPty()
 	if err != nil {
 		httpWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	defer wsPty.Stop()
 
 	go transferPtyFileContentToWebsocket(conn, wsPty.ptyFile)
 
@@ -192,7 +195,7 @@ func ptyHandler(httpWriter http.ResponseWriter, r *http.Request) {
 	}
 
 	// read from the web socket, copying to the pty master
-	// messages are expected to be text and base64 encoded
+	// messages are expected to be text
 	for {
 		mt, payload, err := conn.ReadMessage()
 		if err != nil && err != io.EOF {
@@ -236,14 +239,13 @@ func ptyHandler(httpWriter http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	wsPty.Stop()
 }
 
 func init() {
 	cwd, _ := os.Getwd()
-	flag.StringVar(&addressFlag,           "addr",   ":9000",     "IP:PORT or :PORT address to listen on")
-	flag.StringVar(&commandFlag,           "cmd",    "/bin/bash", "command to execute on slave side of the pty")
-	flag.StringVar(&staticContentPathFlag, "static", cwd,         "path to static content")
+	flag.StringVar(&addressFlag,             "addr",   DefaultTerminalServerAddr, "IP:PORT or :PORT address to listen on")
+	flag.StringVar(&commandFlag,             "cmd",    DefaultCommand,            "command to execute on slave side of the pty")
+	flag.StringVar(&staticContentPathFlag,   "static", cwd,                       "path to static content")
 	// TODO: make sure paths exist and have correct permissions
 }
 
