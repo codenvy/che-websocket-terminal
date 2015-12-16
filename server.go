@@ -46,8 +46,8 @@ const (
 	DefaultPtyBufferSize = 8192;
 
 	// Flag default values
-	DefaultTerminalServerAddr     = "localhost:9000";
-	DefaultCommand                = "/bin/bash"
+	DefaultTerminalServerAddr = "localhost:9000";
+	DefaultCommand            = "/bin/bash"
 )
 
 // The address to run this http server on.
