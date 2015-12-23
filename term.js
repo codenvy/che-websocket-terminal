@@ -2590,12 +2590,15 @@ Terminal.prototype.keyDown = function(ev) {
             return;
           }
           // Ctrl-C
-          var sel = window.getSelection().getRangeAt(0);
-          var range = sel.endOffset - sel.startOffset;
-          if (ev.keyCode === 67 && range > 0) {
-            return;
-          }
-          key = String.fromCharCode(ev.keyCode - 64);
+          var sel = window.getSelection && window.getSelection();
+            if (sel && sel.rangeCount > 0) {
+              sel = window.getSelection().getRangeAt(0);
+              var range = sel.endOffset - sel.startOffset;
+              if (ev.keyCode === 67 && range > 0) {
+                return;
+              }
+            }
+            key = String.fromCharCode(ev.keyCode - 64);
         } else if (ev.keyCode === 32) {
           // NUL
           key = String.fromCharCode(0);
@@ -3968,8 +3971,13 @@ Terminal.prototype.resetMode = function(params) {
           //   this.y = this.savedY;
           // }
           this.refresh(0, this.rows - 1);
-          this.showCursor();
+        } else {
+          // if this.normal = null restore state works incorrect, so we reset state
+          this.savedX = 0;
+          this.savedY = 0;
+          this.reset();
         }
+        this.showCursor();
         break;
     }
   }
