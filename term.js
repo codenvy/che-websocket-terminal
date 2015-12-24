@@ -421,13 +421,13 @@ Terminal.prototype.focus = function() {
   if (this.sendFocus) this.send('\x1b[I');
   this.showCursor();
 
-  // try {
-  //   this.element.focus();
-  // } catch (e) {
-  //   ;
-  // }
+  try {
+    this.element.focus();
+  } catch (e) {
+    ;
+  }
 
-  // this.emit('focus');
+  this.emit('focus');
 
   Terminal.focus = this;
 };
