@@ -89,9 +89,9 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="index.html" todir="${project.zip.dir}" />
-                                <copy file="term.js" todir="${project.zip.dir}" />
-                                <copy file="server.go" todir="${project.go.build.dir}" />
+                                <copy file="src/main/resources/index.html" todir="${project.zip.dir}" />
+                                <copy file="src/main/resources/term.js" todir="${project.zip.dir}" />
+                                <copy file="src/main/go/server.go" todir="${project.go.build.dir}" />
                             </target>
                         </configuration>
                     </execution>
@@ -161,6 +161,17 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/go/server.go</exclude>
+                        <exclude>src/main/resources/index.html</exclude>
+                        <exclude>src/main/resources/term.js</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
         </plugins>
     </build>
