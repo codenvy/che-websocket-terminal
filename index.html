@@ -9,7 +9,13 @@
 
 <script>
     $(document).ready(function () {
-        var sock = new WebSocket("ws://" + window.location.host + "/pty");
+        var socketUrl = window.location.host + "/pty";
+        if (window.location.protocol === "https:") {
+            socketUrl = "wss://" + socketUrl;
+        } else {
+            socketUrl = "ws://" + socketUrl;
+        }
+        var sock = new WebSocket(socketUrl);
 
         sock.onerror = function (e) {
             console.log("socket error", e);
